@@ -18,5 +18,5 @@ print(
     '''Things that i hope to learn:'''
     '\n  1. Python 1' + chr(10) + chr(2 ** (2 ** 2) * 2) * 2 +
     "two. data structures 5\n"
-    '\x20 '
+    '\x20 3: more things that i didn'"'t know"
 )
