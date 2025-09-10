@@ -11,6 +11,12 @@ suggestions:
 (/i-am-a/current-student.php -> /myfloridapoly/ and i don't know where the weekly phoenix is now)
 2. put a note on the page that it's moved instead of a 404 not found
 3. change the firefox start page to the correct weekly phoenix page
+
+ps . \
+just realized that they tried to move the weekly phoenix from its own domain
+they DID change the firefox start page
+to the WRONG PAGE
+(it doesn't work yet)
 '''
 
 a = 7
