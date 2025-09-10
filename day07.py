@@ -1,6 +1,6 @@
 '''
 i'd like to register a complaint about the new website redesign
-two commony used pages were broken
+two commonly used pages were broken
 /WeeklyPhoenix
 and
 /i-am-a/current-student.php
