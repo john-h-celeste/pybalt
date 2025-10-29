@@ -11,6 +11,10 @@ for cs in itertools.product(*[chars] * 2):
     if hashlib.new('md5', s).hexdigest() == h:
         print(s)
 
+for c1 in 'cau':
+    for c2 in 'cas':
+        print(c1 + c2)
+
 # jwt/claims_auth.py
 import jwt
 data = {'payload': 'data', 'iss': 'Headquarters', 'aud': 'learn-python'}
