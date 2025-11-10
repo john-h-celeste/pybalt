@@ -11,23 +11,19 @@ import requests
 config = {}
 
 
-def fetch_url():
-    url = _url.get()
-    config['images'] = []
-    _images.set(())  # initialised as an empty tuple
-    try:
-        page = requests.get(url)
-    except requests.RequestException as err:
-        sb(str(err))
-    else:
-        soup = BeautifulSoup(page.content, 'html.parser')
-        images = fetch_images(soup, url)
-        if images:
-            _images.set(tuple(img['name'] for img in images))
-            sb('Images found: {}'.format(len(images)))
+def fetch_url(fetch_cb):
+    def fetch_url():
+        url = _url.get()
+        config['images'] = []
+        _images.set(())  # initialised as an empty tuple
+        try:
+            page = requests.get(url)
+        except requests.RequestException as err:
+            sb(str(err))
         else:
-            sb('No images found')
-        config['images'] = images
+            soup = BeautifulSoup(page.content, 'html.parser')
+            images = fetch_cb(soup, url)
+    return fetch_url
 
 
 def fetch_images(soup, base_url):
@@ -37,11 +33,26 @@ def fetch_images(soup, base_url):
         img_url = f'{base_url}/{src}'
         name = img_url.split('/')[-1]
         images.append(dict(name=name, url=img_url))
-    return images
+    if _save_method not in ['json', 'img']:
+        save_method = ['img']
+    _img_only_radio.configure(state = ACTIVE)
+    _json_radio.configure(state = ACTIVE)
+    _scrape_btn.configure(state = ACTIVE)
+    if images:
+        _images.set(tuple(img['name'] for img in images))
+        sb('Images found: {}'.format(len(images)))
+    else:
+        sb('No images found')
+    config['images'] = images
+    config['type'] = 'images'
 
 
-def fetch_title(soup):
-    return soup.find('title').string
+def fetch_title(soup, base_url):
+    _save_method.set('')
+    _img_only_radio.configure(state = DISABLED)
+    _json_radio.configure(state = DISABLED)
+    _scrape_btn.configure(state = DISABLED)
+    sb('Title found: {}'.format(soup.find('title').string))
 
 
 def fetch_links(soup, base_url):
@@ -52,13 +63,24 @@ def fetch_links(soup, base_url):
             continue
         if base_url in href:
             continue
-        links.append(href)
-    return links
+        name = href.rstrip('/').split('/')[-1]
+        links.append(dict(name=href, visiblename=name, url=href))
+    if links:
+        _images.set(tuple(link['visiblename'] for link in links))
+        sb('Links found: {}'.format(len(links)))
+    else:
+        sb('No links found')
+    _save_method.set('json')
+    _img_only_radio.configure(state = DISABLED)
+    _json_radio.configure(state = ACTIVE)
+    _scrape_btn.configure(state = ACTIVE)
+    config['images'] = links
+    config['type'] = 'links'
 
 
 def save():
     if not config.get('images'):
-        alert('No images to save')
+        alert('No {} to save'.format(config['type']))
         return
 
     if _save_method.get() == 'img':
@@ -66,7 +88,7 @@ def save():
         save_images(dirname)
     else:
         filename = filedialog.asksaveasfilename(
-            initialfile='images.json',
+            initialfile='{}.json'.format(config['type']),
             filetypes=[('JSON', '.json')])
         save_json(filename)
 
@@ -105,7 +127,7 @@ def alert(msg):
 
 if __name__ == "__main__": # execute logic if run directly
     _root = Tk() # instantiate instance of Tk class
-    _root.title('Scrape app')
+    _root.title('bobby\'s cool web scraper 2000')
     _mainframe = ttk.Frame(_root, padding='5 5 5 5 ') # root is parent of frame
     _mainframe.grid(row=0, column=0, sticky=("E", "W", "N", "S")) # placed on first row,col of parent
     # frame can extend itself in all cardinal directions
@@ -119,12 +141,16 @@ if __name__ == "__main__": # execute logic if run directly
     _url.set('http://localhost:8000') # sets initial value of _url
     _url_entry = ttk.Entry(
         _url_frame, width=40, textvariable=_url) # text box
-    _url_entry.grid(row=0, column=0, sticky=(E, W, S, N), padx=5)
-    # grid mgr places object at position
-    _fetch_btn = ttk.Button(
-        _url_frame, text='Fetch info', command=fetch_url) # create button
-    # fetch_url() is callback for button press
-    _fetch_btn.grid(row=0, column=1, sticky=W, padx=5)
+    _url_entry.grid(row=1, column=0, sticky=(E, W, S, N), padx=5)
+    _fetch_btn_1 = ttk.Button(
+        _url_frame, text='Fetch info', command=fetch_url(fetch_images))
+    _fetch_btn_1.grid(row=0, column=1, sticky=W, padx=5)
+    _fetch_btn_2 = ttk.Button(
+        _url_frame, text='Fetch title', command=fetch_url(fetch_title))
+    _fetch_btn_2.grid(row=1, column=1, sticky=W, padx=5)
+    _fetch_btn_3 = ttk.Button(
+        _url_frame, text='Fetch links', command=fetch_url(fetch_links))
+    _fetch_btn_3.grid(row=2, column=1, sticky=W, padx=5)
 
     # img_frame contains Listbox and Radio Frame
     _img_frame = ttk.LabelFrame(
@@ -150,7 +176,7 @@ if __name__ == "__main__": # execute logic if run directly
     # place label and padding
     # radio buttons are children of _radio_frame
     _choice_lbl = ttk.Label(
-        _radio_frame, text="Choose how to save images")
+        _radio_frame, text="Choose how to save")
     _choice_lbl.grid(row=0, column=0, padx=5, pady=5)
     _save_method = StringVar()
     _save_method.set('img')
