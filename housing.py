@@ -192,6 +192,10 @@ def delete_student(id):
     if student is None:
         return {"error": "Student not found"}, 404
 
+    housing = Housing.query.filter_by(student_id=id).first()
+    if housing:
+        db.session.delete(housing)
+
     db.session.delete(student)
     db.session.commit()
     return {"message": f"Student {id} removed successfully"}, 200
@@ -203,8 +207,8 @@ def delete_student(id):
 
 # 1) Get student information to be verified (including housing)
 # Route: GET /students/<id>/verify
-@app.route('/students/<int:id>/verify')
-def verify_student():
+@app.route('/students/<int:student_id>/verify')
+def verify_student(student_id):
     student = Student.query.get(student_id)
     if not student:
         return {"error": "Student not found"}, 404
@@ -292,8 +296,12 @@ def add_housing():
 # Example: DELETE /housing/1  (where 1 is student_id)
 @app.route('/housing/<int:student_id>', methods=['DELETE'])
 def delete_housing(student_id):
+    housing = Housing.query.filter_by(student_id=student_id).first()
+    if housing is None:
+        return {"error": "Housing record not found for this student"}, 404
 
-    # TODO: Fetch student housing record. If available, delete it from BD
+    db.session.delete(housing)
+    db.session.commit()
     return {
         "message": f"Housing record for student {student_id} deleted successfully"
     }, 200
