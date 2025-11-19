@@ -4,6 +4,8 @@ import pandas as pd
 
 df = sb.load_dataset("taxis")
 
+print(df)
+
 print(f'Number of rows: {len(df)}')
 print(f'Number of columns: {len(df.columns)}')
 print(f'Average fare: ${df.fare.mean():.4}')
